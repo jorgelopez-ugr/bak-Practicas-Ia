@@ -1,0 +1,166 @@
+list<Action> ComportamientoJugador::AnchuraN3(const stateN0 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa, bool zapatillas, bool bikini)
+{
+	nodeN3 current_node;
+	priority_queue<nodeN3, vector<nodeN3>, ordenarColaN3> frontier;
+	set<nodeN3> explored;
+	list<Action> plan;
+	list<Action> acciones_jugador = {actIDLE, actWALK, actRUN, actTURN_L, actTURN_SR};
+	list<Action> acciones_colaborador = {act_CLB_WALK, act_CLB_TURN_SR};
+	bool SolutionFound = (current_node.node.st.colaborador.f == final.f and current_node.node.st.colaborador.c == final.c);
+
+	current_node.node.st = inicio;
+
+	frontier.push(current_node);
+
+	while (!frontier.empty() and !SolutionFound)
+	{
+		current_node = frontier.top();
+		frontier.pop();
+
+		while (!(explored.find(current_node) == explored.end()) && !frontier.empty()){
+			current_node = frontier.top();
+			frontier.pop();
+		}
+
+		if (current_node.node.st.colaborador.f == final.f and current_node.node.st.colaborador.c == final.c){
+			SolutionFound = true;
+			break;
+		}
+
+		explored.insert(current_node);
+
+		for (auto accion : acciones_jugador)
+		{
+			if (mapa[current_node.node.st.jugador.f][current_node.node.st.jugador.c] == 'D')
+			{
+				current_node.j_bikini = false;
+				current_node.j_zapatillas = true;
+			}
+
+			if (mapa[current_node.node.st.jugador.f][current_node.node.st.jugador.c] == 'K')
+			{
+				current_node.j_bikini = true;
+				current_node.j_zapatillas = false;
+			}
+
+			nodeN3 child = current_node;
+			child.node.st = apply(accion, current_node.node.st, mapa);
+			child.node.secuencia.push_back(accion);
+
+			if (explored.find(child) == explored.end()){
+				child.costo += Costo2(current_node, mapa[current_node.node.st.jugador.f][current_node.node.st.jugador.c], accion) + distancia(child, final);
+				frontier.push(child);
+			}
+		}
+
+		for (auto accion : acciones_colaborador)
+		{
+			if (mapa[current_node.node.st.colaborador.f][current_node.node.st.colaborador.c] == 'D')
+			{
+				current_node.c_bikini = false;
+				current_node.c_zapatillas = true;
+			}
+
+			if (mapa[current_node.node.st.colaborador.f][current_node.node.st.colaborador.c] == 'K')
+			{
+				current_node.c_bikini = true;
+				current_node.c_zapatillas = false;
+			}
+
+			nodeN3 child = current_node;
+			
+			if (ColaboradorEnVision(current_node.node.st.jugador, current_node.node.st.colaborador, mapa))
+			{
+				child.node.st = apply(accion, current_node.node.st, mapa);
+				child.node.secuencia.push_back(accion);
+			}
+
+			else 
+			{
+				child.node.st = apply(child.node.st.ultimaOrdenColaborador, current_node.node.st, mapa);
+				child.node.secuencia.push_back(child.node.st.ultimaOrdenColaborador);
+			}
+
+			if (explored.find(child) == explored.end()){
+				child.costo += Costo2(current_node, mapa[current_node.node.st.colaborador.f][current_node.node.st.colaborador.c], accion) + distancia(child, final);
+				frontier.push(child);
+			}
+		}
+	}
+
+	if (SolutionFound){
+		plan = current_node.node.secuencia; 
+		PintaPlan(plan);
+	}
+
+	return plan;
+}
+
+
+
+
+node3 child_node = current_node;
+
+			if (!clbEnVision && (accion == act_CLB_STOP || accion == act_CLB_TURN_SR || accion == act_CLB_WALK)){
+				child_node.st = apply2(current_node.st.ultimaOrdenColaborador, current_node.st, mapa);
+				child_node.secuencia.push_back(current_node.st.ultimaOrdenColaborador);
+
+				if (accion == act_CLB_WALK){
+					if(mapa[child_node.st.colaborador.f][child_node.st.colaborador.c] == 'K'){
+						child_node.tieneBikini_colab = true;
+						child_node.tieneZapatillas_colab= false;
+					}
+					else if (mapa[current_node.st.jugador.f][current_node.st.jugador.c] == 'D')
+					{
+						child_node.tieneBikini_colab = false;
+						child_node.tieneZapatillas_colab= true;
+					}
+				}
+
+				child_node.coste_total_secuencia = costeHeuristico(child_node.st,goal);
+
+			}
+			else {
+				child_node.st = apply(accion, current_node.st, mapa);
+				child_node.secuencia.push_back(accion);
+
+				if (accion == act_CLB_STOP || accion == act_CLB_TURN_SR || accion == act_CLB_WALK){
+					// child_node.coste_total_secuencia += calculaCosteDelPaso(accion,mapa[current_node.st.colaborador.f][current_node.st.colaborador.c],child_node);
+					if (accion == act_CLB_WALK){
+						if(mapa[child_node.st.colaborador.f][child_node.st.colaborador.c] == 'K'){
+							child_node.tieneBikini_colab = true;
+							child_node.tieneZapatillas_colab= false;
+						}
+						else if (mapa[current_node.st.jugador.f][current_node.st.jugador.c] == 'D')
+						{
+							child_node.tieneBikini_colab = false;
+							child_node.tieneZapatillas_colab= true;
+						}
+					}
+
+					child_node.coste_total_secuencia = costeHeuristico(child_node.st,goal);
+
+				}
+				else
+				{
+					// child_node.coste_total_secuencia += calculaCosteDelPaso(accion,mapa[current_node.st.jugador.f][current_node.st.jugador.c],child_node);
+					if (accion == actRUN || accion == actWALK){
+						if(mapa[child_node.st.jugador.f][child_node.st.jugador.c] == 'K'){
+							child_node.tieneBikini_jugador = true;
+							child_node.tieneZapatillas_jugador= false;
+						}
+						else if (mapa[current_node.st.jugador.f][current_node.st.jugador.c] == 'D')
+						{
+							child_node.tieneBikini_jugador = false;
+							child_node.tieneZapatillas_jugador= true;
+						}
+					}
+
+					child_node.coste_total_secuencia = costeHeuristico(child_node.st,goal);
+				}
+			}
+
+			if (explorados.find(child_node) == explorados.end()){
+				frontera.push(child_node);
+			}
+		}

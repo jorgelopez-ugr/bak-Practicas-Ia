@@ -1,0 +1,9 @@
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/obj3DLib.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/GLUILib.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/modelosBelkanLib.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/comportamientosLib.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/motorLib.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/practica1.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/practica1SG.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/edit_cache.dir
+/home/jorge/Escritorio/IA/IA-Practs/practica1/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,130 @@
+list <Action> ComportamientoJugador::AnchuraLvl1(const stateN0 &inicio, const ubicacion &final, const vector<vector<unsigned char> > &mapa){
+	nodeN0 nodo_actual;
+	nodeN0 nodo_actual_CLB;
+	list<nodeN0> frontera;
+	set<nodeN0> explorados;
+	list<nodeN0> frontera_CLB;
+	set<nodeN0> explorados_CLB;
+	bool haySolucion = false;
+	bool clbEnRango = false;
+	nodo_actual.st = inicio;
+	nodo_actual_CLB.st = inicio;
+
+	frontera.push_back(nodo_actual);
+	frontera_CLB.push_back(nodo_actual_CLB);
+
+	while (!haySolucion && !(frontera.empty() || frontera_CLB.empty()))
+	{
+		//fase inicial de actualizacion de estado
+		frontera.pop_front(); 
+		explorados.insert(nodo_actual);
+
+		if (!clbEnRango){
+			//Generar hijo actWALK
+			nodeN0 nodo_hijoW = nodo_actual;
+			nodo_hijoW.st = apply(actWALK, nodo_actual.st,mapa);
+			nodo_hijoW.secuencia.push_back(actWALK);
+
+			if (clbEnSensoresHipoteticos(nodo_hijoW.st)){
+				nodo_actual = nodo_hijoW;
+				clbEnRango = true;
+			}
+			else if (explorados.find(nodo_hijoW) != explorados.end())
+			{
+				frontera.push_back(nodo_hijoW);
+			}
+			//Generar un hijo para Run
+			if (!clbEnRango){
+				nodeN0 nodo_hijoR = nodo_actual;
+				nodo_hijoR.st = apply(actRUN, nodo_actual.st,mapa);
+				nodo_hijoR.secuencia.push_back(actRUN);
+
+				if (clbEnSensoresHipoteticos(nodo_hijoR.st)){
+					nodo_actual = nodo_hijoR;
+					clbEnRango = true;
+				}
+				else if (explorados.find(nodo_hijoR) != explorados.end())
+				{
+					frontera.push_back(nodo_hijoR);
+				}
+			}
+		//Generar un hijo para TurnSR
+			if (!clbEnRango){
+				nodeN0 nodo_hijoTSR = nodo_actual;
+				nodo_hijoTSR.st = apply(actTURN_SR, nodo_actual.st,mapa);
+				nodo_hijoTSR.secuencia.push_back(actTURN_SR);
+
+				if (explorados.find(nodo_hijoTSR) == explorados.end()){
+					frontera.push_back(nodo_hijoTSR);
+
+					if (clbEnSensoresHipoteticos(nodo_hijoTSR.st))
+					{
+						clbEnRango = true;
+					}
+				}
+
+				nodeN0 nodo_hijoTL = nodo_actual;
+				nodo_hijoTL.st = apply(actTURN_L, nodo_actual.st,mapa);
+				nodo_hijoTL.secuencia.push_back(actTURN_L);
+
+				if (explorados.find(nodo_hijoTL) == explorados.end()){
+
+					if (clbEnSensoresHipoteticos(nodo_hijoTL.st))
+					{
+						clbEnRango = true;
+					}
+
+					frontera.push_back(nodo_hijoTL);
+				}
+				
+			}
+		}
+	//apply crea una situacion hipotetica de que pasaria si ejerces cierto movimiento
+	//sobre el estado actual.
+		//Generar los hijos del colaborador (condicion si colaborador en rango de vision)
+		if (/*metodo que devuelve true si ve al colaborador*/ clbEnRango){
+
+			frontera_CLB.pop_front(); 
+			explorados_CLB.insert(nodo_actual_CLB);
+
+			nodeN0 nodo_hijoCLBW = nodo_actual_CLB;
+			nodo_hijoCLBW.st = apply(act_CLB_WALK, nodo_actual_CLB.st,mapa);
+			nodo_hijoCLBW.secuencia.push_back(act_CLB_WALK);
+
+			if (esSolucion(nodo_hijoCLBW.st)){
+				nodo_actual_CLB = nodo_hijoCLBW;
+				haySolucion = true;
+			}
+			else if (explorados_CLB.find(nodo_hijoCLBW) != explorados_CLB.end())
+			{
+				frontera_CLB.push_back(nodo_hijoCLBW);
+			}
+
+			if (!haySolucion){
+				nodeN0 nodo_hijoCLBSR = nodo_actual_CLB;
+				nodo_hijoCLBSR.st = apply(act_CLB_TURN_SR, nodo_actual_CLB.st,mapa);
+				nodo_hijoCLBSR.secuencia.push_back(act_CLB_TURN_SR);
+
+				if (explorados_CLB.find(nodo_hijoCLBSR) == explorados_CLB.end()){
+					frontera_CLB.push_back(nodo_hijoCLBSR);
+				}
+			}
+		}
+	}
+	
+	if (haySolucion){
+		plan = nodo_actual.secuencia;
+		cout << "Encontrado un plan: ";
+		PintaPlan(nodo_actual.secuencia);
+		PintaPlan(nodo_actual_CLB.secuencia);
+	}
+
+	if (clbEnRango){
+		return nodo_actual_CLB.secuencia;
+	}
+	else
+	{
+		return nodo_actual.secuencia;
+	}
+	
+}
